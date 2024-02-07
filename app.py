@@ -9,7 +9,7 @@ from github import Github, GithubIntegration
 
 app = Flask(__name__)
 # GitHub App ID
-app_id = 675116
+app_id = 821348
 # Read the bot certificate
 with open(os.path.normpath(os.path.expanduser("bot_key.pem")), "r") as cert_file:
     app_key = cert_file.read()
@@ -143,4 +143,4 @@ def bot():
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(host='0.0.0.0',debug=True, port=5000)
