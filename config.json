@@ -1,0 +1,6 @@
+{
+  "payload-type": "description",
+  "endpoint": "http://localhost:8000/models/Model1_IssueTracker_Li2022_ESEM",
+  "label-location": "label",
+  "auto-label": false
+}

@@ -1,0 +1,13 @@
+*.aux
+*.bbl
+*.blg
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.xdv
+*.synctex.gz
+.DS_Store
+example.eps
+/satd/SATD_Detector/data/embeddings.bin
+/satd/SATD_Detector/data/weights.hdf5
