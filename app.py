@@ -152,7 +152,7 @@ def bot():
         ).token
     )
     repo = git_connection.get_repo(f"{owner}/{repo_name}")
-    # get file "config.json" from the repo
+    # TODO: if the config file is not found, we should use the default config
     config_file = repo.get_contents("config.json")
     # decode the file
     config = json.loads(base64.b64decode(config_file.content).decode("utf-8"))
