@@ -3,7 +3,9 @@ import requests
 import json
 import base64
 
-from flask import Flask, request
+from flask import Flask, request, abort
+import hmac
+import hashlib
 from github import Github, GithubIntegration
 
 
@@ -62,6 +64,7 @@ def label_title_and_desc(config, data, headers, issue, url):
     issue.add_to_labels("title: " + title_label)
     issue.add_to_labels("description: " + description_label)
 
+
 def handle_issue_comment_event(repo, payload, config):
     commenter = payload["comment"]["user"]["login"]
     if commenter == "technical-debt-mitigation-bot[bot]":
@@ -113,11 +116,28 @@ def handle_issue_creation_event(repo, payload, config):
     return "ok"
 
 
-@app.route("/", methods=["POST"])
+@app.route("/webhook", methods=["POST"])
 def bot():
+    print("Received a request")
+    # Validate the request is from GitHub
+    secret = os.getenv("GITHUB_WEBHOOK_SECRET")
+    signature = request.headers.get("X-Hub-Signature")
+    if signature is None:
+        abort(403)
+
+    sha_name, signature = signature.split("=")
+    if sha_name != "sha1":
+        abort(501)
+
+    mac = hmac.new(secret.encode("utf-8"), msg=request.data, digestmod="sha1")
+    # app.logger.info("mac: ", mac.hexdigest())
+    if not hmac.compare_digest(str(mac.hexdigest()), str(signature)):
+        abort(403)
+
     # Get the event payload
     payload = request.json
-    # print(payload)
+
+    app.logger.info("GOOD TO GO")
 
     # Check if the event is a GitHub Issue Comment creation event
     payload_type = request.headers.get("X-GitHub-Event")
@@ -143,4 +163,4 @@ def bot():
 
 
 if __name__ == "__main__":
-    app.run(host='0.0.0.0',debug=True, port=5000)
+    app.run(host="0.0.0.0", debug=True, port=5000)

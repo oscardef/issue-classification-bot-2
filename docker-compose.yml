@@ -2,13 +2,20 @@ version: '3'
 
 services:
   app:
-    build: .
+    build: 
+      context: .
+      dockerfile: Dockerfile
     ports:
       - "5000:5000"
-    depends_on:
-      - smee
+    environment:
+      - NAME=World
+      - GITHUB_WEBHOOK_SECRET=ea4c0584ecdda56af9ab38921ff2e2831449d5a2c13fbc9e5db79786cee54221
 
-  smee:
-    image: rpetti/smee-server
+  model:
+    build:
+      context: ModelsBackend  # Replace with the actual path to your other service's directory
+      dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "8000:8000"
+    environment:
+      - BACKEND_PORT=8000
