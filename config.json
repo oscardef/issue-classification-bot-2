@@ -1,6 +1,6 @@
 {
   "payload-type": "description",
-  "endpoint": "http://64.227.72.214:8000/models/Model1_IssueTracker_Li2022_ESEM",
+  "endpoint": "http://model:8000/models/Model1_IssueTracker_Li2022_ESEM",
   "label-location": "label",
   "auto-label": false
 }
