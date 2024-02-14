@@ -2,9 +2,5 @@ Here are the commands I understand:
  - \"/tdbot label\" labels an issue using a ML model.
 
  - \"/tdbot label \<label\>\" labels an issue with the given label.
-
- - \"/tdbot auto\" enables automatic labeling of future issues.
-
- - \"/tdbot auto-off\" disables automatic labeling of future issues if it is already enabled.
-
+ 
  - \"/tdbot help\" shows this help message.
