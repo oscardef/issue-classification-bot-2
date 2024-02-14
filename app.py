@@ -9,7 +9,7 @@ from github import Github, GithubIntegration
 
 app = Flask(__name__)
 
-app_id = os.getenv("GITHUB_APP_ID")
+app_id = 821348
 
 # Read the bot certificate
 with open(os.path.normpath(os.path.expanduser("bot_key.pem")), "r") as cert_file:
@@ -69,7 +69,6 @@ def handle_issue_comment_event(repo, payload, config):
     if commenter == "technical-debt-mitigation-bot[bot]":
         return "ok"
 
-    #
     comment = repo.get_issue(number=payload["issue"]["number"]).get_comment(
         payload["comment"]["id"]
     )
@@ -108,8 +107,7 @@ def handle_issue_creation_event(repo, payload, config):
     if config["initial-message"] == True:
         issue.create_comment(
             "This issue seems to document technical debt.\n\n"
-            'You can label it with "/tdbot label"\n\n'
-            'I can label future issues automatically with "/tdbot auto"'
+            'You can label it with "/tdbot label"'
         )
     return "ok"
 
@@ -151,6 +149,7 @@ def bot():
     config_file = {}
     try:
         config_file = repo.get_contents("config.json")
+        print("Using config file from the repo")
         # decode the file
         config = json.loads(base64.b64decode(config_file.content).decode("utf-8"))
     except:
