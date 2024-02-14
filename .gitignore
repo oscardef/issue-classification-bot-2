@@ -11,3 +11,4 @@
 example.eps
 /satd/SATD_Detector/data/embeddings.bin
 /satd/SATD_Detector/data/weights.hdf5
+*.pem
