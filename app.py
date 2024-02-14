@@ -148,7 +148,7 @@ def bot():
     # if repo has config.json file use it, otherwise use the config.json file locally in the bot
     config_file = {}
     try:
-        config_file = repo.get_contents("config.json")
+        config_file = repo.get_contents("configs.json")
         print("Using config file from the repo")
         # decode the file
         config = json.loads(base64.b64decode(config_file.content).decode("utf-8"))
