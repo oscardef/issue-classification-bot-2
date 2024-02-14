@@ -36,6 +36,7 @@ Edit the `config.json` file to configure the bot's behavior:
 - `endpoint`: URL of the machine learning model's endpoint.
 - `label-location`: JSON path in the model's response for the label.
 - `auto-label`: Boolean to set if the bot should automatically label new issues.
+- `initial-message`: Boolean to set if the bot should send a message when an issue is created.
 
 ## Troubleshooting
 If you encounter issues with the bot:

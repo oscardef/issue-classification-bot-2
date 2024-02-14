@@ -5,13 +5,12 @@ import base64
 
 from flask import Flask, request, abort
 import hmac
-import hashlib
 from github import Github, GithubIntegration
 
-
 app = Flask(__name__)
-# GitHub App ID
-app_id = 821348
+
+app_id = os.getenv("GITHUB_APP_ID")
+
 # Read the bot certificate
 with open(os.path.normpath(os.path.expanduser("bot_key.pem")), "r") as cert_file:
     app_key = cert_file.read()
@@ -76,7 +75,7 @@ def handle_issue_comment_event(repo, payload, config):
     )
     issue = repo.get_issue(number=payload["issue"]["number"])
 
-    # comment body will be a command like "/tdbot label" or "/tdbot auto", etc. So we need to parse it
+    # comment body will be a command like "/tdbot label", "/tdbot help", etc. So we need to parse it
     command = comment.body.split(" ")
     if command[0] == "/tdbot":
         if command[1] == "label":
@@ -87,7 +86,6 @@ def handle_issue_comment_event(repo, payload, config):
                 label = " ".join(command[2:])
                 label_issue(issue, config, label)
         elif command[1] == "help":
-            # read the help message from a file
             help_message = ""
             with open("help_message.txt", "r") as f:
                 help_message = f.read()
@@ -107,18 +105,17 @@ def handle_issue_creation_event(repo, payload, config):
     if config["auto-label"] == True:
         label_issue(issue, config)
         return "ok"
-
-    issue.create_comment(
-        "This issue seems to document technical debt.\n\n"
-        'You can label it with "/tdbot label"\n\n'
-        'I can label future issues automatically with "/tdbot auto"'
-    )
+    if config["initial-message"] == True:
+        issue.create_comment(
+            "This issue seems to document technical debt.\n\n"
+            'You can label it with "/tdbot label"\n\n'
+            'I can label future issues automatically with "/tdbot auto"'
+        )
     return "ok"
 
 
 @app.route("/webhook", methods=["POST"])
 def bot():
-    print("Received a request")
     # Validate the request is from GitHub
     secret = os.getenv("GITHUB_WEBHOOK_SECRET")
     signature = request.headers.get("X-Hub-Signature")
@@ -130,32 +127,36 @@ def bot():
         abort(501)
 
     mac = hmac.new(secret.encode("utf-8"), msg=request.data, digestmod="sha1")
-    # app.logger.info("mac: ", mac.hexdigest())
+
     if not hmac.compare_digest(str(mac.hexdigest()), str(signature)):
         abort(403)
 
     # Get the event payload
     payload = request.json
 
-    app.logger.info("GOOD TO GO")
-
     # Check if the event is a GitHub Issue Comment creation event
     payload_type = request.headers.get("X-GitHub-Event")
     owner = payload["repository"]["owner"]["login"]
     repo_name = payload["repository"]["name"]
+
     # Get a git connection as our bot
-    # Here is where we are getting the permission to talk as our bot and not
-    # as a Python webservice
     git_connection = Github(
         login_or_token=git_integration.get_access_token(
             git_integration.get_installation(owner, repo_name).id
         ).token
     )
+
     repo = git_connection.get_repo(f"{owner}/{repo_name}")
-    # TODO: if the config file is not found, we should use the default config
-    config_file = repo.get_contents("config.json")
-    # decode the file
-    config = json.loads(base64.b64decode(config_file.content).decode("utf-8"))
+    # if repo has config.json file use it, otherwise use the config.json file locally in the bot
+    config_file = {}
+    try:
+        config_file = repo.get_contents("config.json")
+        # decode the file
+        config = json.loads(base64.b64decode(config_file.content).decode("utf-8"))
+    except:
+        with open("config.json", "r") as f:
+            config = json.load(f)
+
     if payload_type == "issue_comment":
         return handle_issue_comment_event(repo, payload, config)
     elif payload_type == "issues":
