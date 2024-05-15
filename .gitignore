@@ -13,3 +13,4 @@ example.eps
 /satd/SATD_Detector/data/weights.hdf5
 bot_key.pem
 *.env
+*.secret
