@@ -3,5 +3,17 @@
   "endpoint": "http://model:8000/models/Model1_IssueTracker_Li2022_ESEM",
   "label-location": "label",
   "auto-label": false,
-  "initial-message": true
+  "initial-message": true,
+  "send-emails": true,
+  "when-to-send": "label",
+  "email-info": {
+    "which-labels": "except",
+    "except-labels": ["non-SATD"],
+    "recipients" : [
+        "recipient1@email.com",
+        "recipient2@email.com"
+    ],
+    "email-description-template": "Hi,\n\n{} has been identified in issue number {} with title: '{}'\n\nThis is an automated email. Replies to this message will not be read.",
+    "email-subject-template": "Technical debt identified"
+  }
 }
