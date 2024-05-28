@@ -114,8 +114,8 @@ Edit the `Bot/config.json` file to configure the bot's behavior:
         #### Example:
         ```JSON
         "lingering": [
-            "Hi,\n\nThe following lingering issues have been identified:\n{}\nThis is an automated email. Replies to this message will not be read.",
-            "- #/issue_number: '/issue_title'. The issue has been created on /issue_created_at, and it has been last modified on /issue_updated_at\n"
+          "Hi,\n\nThe following lingering issues have been identified:\n{}\nThis is an automated email. Replies to this message will not be read.",
+          "- #/issue_number: '/issue_title'. The issue has been created on /issue_created_at, and it has been last modified on /issue_updated_at\n"
         ]
         ```
         will result in an email body in the following form:
@@ -153,7 +153,7 @@ Edit the `Bot/config.json` file to configure the bot's behavior:
       "contributor2@yahoo.com"
     ],
     "email-body-template": {
-      "label": "Hi,\n\n/issue_label has been identified in issue #/issue_number with title: '/issue_title' and description: '/issue_description', created by @/issue_author in the /issue_repository repository.\n Link to the issue: /issue_link\n\n This is an automated email. Replies to this message will not be read.",
+      "label": "Hi,\n\n/issue_label has been identified in issue #/issue_number with title: '/issue_title' and description: '/issue_description', created by @/issue_author in the /issue_repository repository.\nLink to the issue: /issue_link\n\nThis is an automated email. Replies to this message will not be read.",
       "lingering": [
         "Hi,\n\nThe following lingering issues have been identified:\n{}\nThis is an automated email. Replies to this message will not be read.",
         "- #/issue_number: '/issue_title'. The issue has been created on /issue_created_at, and it has been last modified on /issue_updated_at\n"
