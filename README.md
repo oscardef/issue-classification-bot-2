@@ -45,7 +45,7 @@ Interact with the *Issue Classification Bot* by using the following commands in 
 - `/tdbot help`: Displays this help message with command details.
 
 ## Configuring the Bot
-Edit the `config.json` file to configure the bot's behavior:
+Edit the `Bot/config.json` file to configure the bot's behavior:
 - `repository-owner`: the GitHub username of the owner of the repository where the bot is installed (*string*)
 - `repository-name`: the name of the repository where the bot is installed (*string*)
 - `payload-type`: Choose between:
@@ -69,10 +69,6 @@ Edit the `config.json` file to configure the bot's behavior:
     * "specific": if the bot should send email notifications only for the labels specified in `specific-labels`
   - `except-labels`: the labels for which the bot does not send email notifications, specified as a *list of strings*: \["label1", "label2", ...]
   - `specific-labels`: the labels for which the bot sends email notifications, specified as a *list of strings*: \["label1", "label2", ...]
-  - `lingering-check-frequency`: the frequency, in number of days (*integer*) > 0, with which the bot checks for lingering issues in the repository and sends email notifications based on them<br>
-  **IMPORTANT❗** <br> › *Make sure to have* `lingering-check-frequency` *set to the desired frequency with which you want (or will want) to receive email notifications about lingering issues **BEFORE** the bot is started, even if at the time of startup of the bot, you do not want to receive this kind of email notifications (by specifying* `when-to-send` *to "label" or anything other than "lingering" or "all").* <br>
-    › *In the future, if you modify* `when-to-send` *to "lingering" or "all" while the bot is running, the bot will be able to send email notifications about lingering issues with the frequency that was specified in* `lingering-check-frequency` *before the bot was started.* <br>
-    › *Once the bot is started, the frequency with which the bot checks for lingering issues and sends email notifications based on them:* `lingering-check-frequency` ***CANNOT** be modified (without stopping the bot and restarting it).*
   - `lingering-issue-threshold`: if the bot should send email notifications when lingering issues have been identified in the repository (by setting `when-to-send` to "lingering" or "all"), choose the threshold, in number of days (*integer*), after an issue would be considered lingering
   - `lingering-mode`: if the bot should send email notifications when lingering issues have been identified in the repository (by setting `when-to-send` to "lingering" or "all"), choose between:
     * "creation-date": if the bot should determine whether an issue is lingering or not based on the creation date of the issue
@@ -80,12 +76,96 @@ Edit the `config.json` file to configure the bot's behavior:
   - `recipients`: the list of email addresses of contributors that should receive email notifications, specified as a *list of strings*: \["emailAddress1", "emailAddress2", ...]
   - `email-description-template`: The template strings used for the description of the bot-generated emails
     * `label`: email description template (*string*) for email notifications about labels<br>
-    **Any string that you use for this email description template should contain three '{}' inside the string, the first one for the label that was associated with the issue, the second one for the issue number, and the third one for the issue title, in this order.**
-    * `lingering`: email description template (*string*) for email notifications about lingering issues<br>
-    **Any string that you use for this email description template should contain one '{}' inside the string, for the lingering issues found in the repository.**
+    **Any string that you use for this email description template can contain any of the following placeholders, which the bot replaces with actual data:**
+      - **/issue_label**: the label added by the bot to the issue
+      - **/issue_number**: the number of the issue where the bot added the label
+      - **/issue_author**: the author of the issue where the bot added the label
+      - **/issue_title**: the title of the issue where the bot added the label
+      - **/issue_description**: the description of the issue where the bot added the label
+      - **/issue_link**: the hyperlink to the issue where the bot added the label
+      - **/issue_repository**: the repository of the issue where the bot added the label
+      - **/issue_updated_at**: the date and time when the issue where the bot added the label was last updated
+      - **/issue_created_at**: the date and time when the issue where the bot added the label was created
+      #### Example:
+      ```JSON
+      "label": "Hi,\n\n/issue_label has been identified in issue #/issue_number with title: '/issue_title' and description: '/issue_description', created by @/issue_author in the /issue_repository repository.\n Link to the issue: /issue_link\n\n This is an automated email. Replies to this message will not be read."
+      ```
+      will result in an email description in the following form: 
+      
+      > Hi,
+      >
+      > SATD has been identified in issue #4 with title: 'Test Issue' and description: 'Test Description', created by @user in the test-repo repository.
+      > Link to the issue: https://github.com/owner/test-repo/issues/4
+      >
+      > This is an automated email. Replies to this message will not be read.    
+    * `lingering`: email description template for email notifications about lingering issues, specified as a *list of two strings*:<br>
+        - 1st string in the list: main template string for the email description<br>
+        **Any string that you use SHOULD contain one '{}' inside the string, for the lingering issues found in the repository.**
+        - 2nd string in the list: template string for each of the lingering issues to be added to the email description<br> 
+        **Any string that you use can contain any of the following placeholders, which the bot replaces with actual data:**
+          - **/issue_number**: the number of the lingering issue
+          - **/issue_author**: the author of the lingering issue
+          - **/issue_title**: the title of the lingering issue
+          - **/issue_description**: the description of the lingering issue
+          - **/issue_link**: the hyperlink to the lingering issue
+          - **/issue_repository**: the repository of the lingering issue
+          - **/issue_updated_at**: the date and time when the lingering issue was last updated
+          - **/issue_created_at**: the date and time when the lingering issue was created
+        #### Example:
+        ```JSON
+        "lingering": [
+            "Hi,\n\nThe following lingering issues have been identified:\n{}\nThis is an automated email. Replies to this message will not be read.",
+            "- #/issue_number: '/issue_title'. The issue has been created on /issue_created_at, and it has been last modified on /issue_updated_at\n"
+        ]
+        ```
+        will result in an email description in the following form:
+        > Hi,
+        >
+        > The following lingering issues have been identified: <br>
+        > \- #6: 'Test issue'. The issue has been created on 2024-04-13 17:25:13+00:00, and it has been last modified on 2024-04-25 16:40:12+00:00 <br>
+        > \- #3: 'Another Test Issue'. The issue has been created on 2024-04-06 21:37:57+00:00, and it has been last modified on 2024-04-07 20:41:36+00:00
+        >
+        > This is an automated email. Replies to this message will not be read.
   - `email-subject-template`: the template strings used for the subject of the bot-generated emails
     * `label`:     email subject template (*string*) for email notifications about labels
     * `lingering`: email subject template (*string*) for email notifications about lingering issues
+   
+### Example `config.json`:
+```JSON
+{
+  "repository-owner": "oscardef",
+  "repository-name": "issue-classification-bot-2",
+  "payload-type": "description",
+  "endpoint": "http://model:8000/models/Model1_IssueTracker_Li2022_ESEM",
+  "label-location": "label",
+  "auto-label": false,
+  "initial-message": true,
+  "send-emails": true,
+  "when-to-send": "all",
+  "email-info": {
+    "which-labels": "specific",
+    "except-labels": ["non-SATD"],
+    "specific-labels": ["SATD"],
+    "lingering-issue-threshold": 30,
+    "lingering-mode": "last-modified",
+    "recipients" : [
+        "contributor1@gmail.com",
+        "contributor2@yahoo.com"
+    ],
+    "email-description-template": {
+      "label": "Hi,\n\n/issue_label has been identified in issue #/issue_number with title: '/issue_title' and description: '/issue_description', created by @/issue_author in the /issue_repository repository.\n Link to the issue: /issue_link\n\n This is an automated email. Replies to this message will not be read.",
+      "lingering": [
+        "Hi,\n\nThe following lingering issues have been identified:\n{}\nThis is an automated email. Replies to this message will not be read.",
+        "- #/issue_number: '/issue_title'. The issue has been created on /issue_created_at, and it has been last modified on /issue_updated_at\n"
+      ]
+    },
+    "email-subject-template": {
+      "label": "Technical debt identified",
+      "lingering": "Lingering issues identified"
+    }
+  }
+}
+```
 ## Troubleshooting
 If you encounter issues with the bot:
 - If labels are not being assigned to issues when a `/tdbot label` comment is posted:
