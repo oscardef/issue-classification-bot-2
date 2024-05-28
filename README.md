@@ -88,13 +88,13 @@ Edit the `Bot/config.json` file to configure the bot's behavior:
       - **/issue_created_at**: the date and time when the issue where the bot added the label was created
       #### Example:
       ```JSON
-      "label": "Hi,\n\n/issue_label has been identified in issue #/issue_number with title: '/issue_title' and description: '/issue_description', created by @/issue_author in the /issue_repository repository.\n Link to the issue: /issue_link\n\n This is an automated email. Replies to this message will not be read."
+      "label": "Hi,\n\n/issue_label has been identified in issue #/issue_number with title: '/issue_title' and description: '/issue_description', created by @/issue_author in the /issue_repository repository.\nLink to the issue: /issue_link\n\nThis is an automated email. Replies to this message will not be read."
       ```
       will result in an email description in the following form: 
       
       > Hi,
       >
-      > SATD has been identified in issue #4 with title: 'Test Issue' and description: 'Test Description', created by @user in the test-repo repository.
+      > SATD has been identified in issue #4 with title: 'Test Issue' and description: 'Test Description', created by @user in the test-repo repository. <br>
       > Link to the issue: https://github.com/owner/test-repo/issues/4
       >
       > This is an automated email. Replies to this message will not be read.    
