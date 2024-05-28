@@ -10,7 +10,7 @@ Read the bot email info from a "bot_email.secret" file structured as follows:
 with open("bot_email.secret", "r") as secret_file:
     lines = secret_file.read().splitlines()
 
-bot_email = lines[0]
+bot_email_address = lines[0]
 bot_email_password = lines[1]
 # This is the name that we want to be displayed as the sender to the recipients, instead of the actual bot email address
 bot_name = 'Issue Classification Bot'
@@ -40,7 +40,7 @@ def send_email(issue_list, config, case, label=None):
         # Establish the SMTP connection to specified server over a secure SSL connection
         smtp = smtplib.SMTP_SSL(email_server, email_server_port)
         # Log in on the SMTP server using the specified bot email address and bot email password
-        smtp.login(bot_email, bot_email_password)
+        smtp.login(bot_email_address, bot_email_password)
     except smtplib.SMTPAuthenticationError as e:
         print("SMTP authentication error:", e, flush=True)
         return
@@ -66,15 +66,15 @@ def send_email(issue_list, config, case, label=None):
         if (email_info["which-labels"] == "all"
                 or (email_info["which-labels"] == "except" and label not in email_info["except-labels"])
                 or (email_info["which-labels"] == "specific" and label in email_info["specific-labels"])):
-            description = email_info['email-description-template']['label']
+            body = email_info['email-body-template']['label']
             subject = email_info['email-subject-template']['label']
             issue = issue_list[0]
 
-            # Replace placeholders in the email description template with actual data from the label and issue
-            formatted_description = format_template(issue, description, label)
+            # Replace placeholders in the email body template with actual data from the label and issue
+            formatted_body = format_template(issue, body, label)
 
             # MIMEText used to create the email object
-            email = MIMEText(formatted_description)
+            email = MIMEText(formatted_body)
         else:
             if email_info["which-labels"] == "except":
                 print(f"Generated label: {label} is contained in the 'except-labels' list specified in config.json,"
@@ -91,14 +91,14 @@ def send_email(issue_list, config, case, label=None):
     """
     # Lingering case
     if case == 1:
-        description_main = email_info['email-description-template']['lingering'][0]
-        description_issue = email_info['email-description-template']['lingering'][1]
+        body_main = email_info['email-body-template']['lingering'][0]
+        body_issue = email_info['email-body-template']['lingering'][1]
         subject = email_info['email-subject-template']['lingering']
 
-        formatted_descriptions_issues = "".join([format_template(issue, description_issue) for issue in issue_list])
-        formatted_description_main = description_main.format(formatted_descriptions_issues)
+        formatted_body_issues = "".join([format_template(issue, body_issue) for issue in issue_list])
+        formatted_body_main = body_main.format(formatted_body_issues)
 
-        email = MIMEText(formatted_description_main)
+        email = MIMEText(formatted_body_main)
 
     # Feature under development case
     # if case == 2:
@@ -110,7 +110,7 @@ def send_email(issue_list, config, case, label=None):
 
     # After the email is created, send it using the SMTP connection to the specified recipients; also error handling
     try:
-        smtp.sendmail(bot_email, recipients, email.as_string())
+        smtp.sendmail(bot_email_address, recipients, email.as_string())
         print("Email sent successfully!", flush=True)
     except smtplib.SMTPException as error:
         print(f"SMTP mail sending error: {error}", flush=True)
