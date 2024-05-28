@@ -1,0 +1,101 @@
+import json
+import base64
+import pytz # Used for timezone handling
+
+from github import Github, GithubIntegration
+from datetime import datetime
+from emailSender import send_email
+
+"""
+* Determine the last time an issue has been modified (by a user, not by the bot), either by creating a comment on it or
+  some other type of event.
+* It could be the case that the issue has not been touched since it has been created, so the time of last modification
+  would be, in this case, the time when the issue has been created.
+"""
+def issue_last_modified(issue):
+    dates = [issue.created_at]
+    for event in issue.get_events():
+        if (not event.actor) or (event.actor.login != "technical-debt-mitigation-bot[bot]"):
+            dates.append(event.created_at)
+    for comment in issue.get_comments():
+        if comment.user.login != "technical-debt-mitigation-bot[bot]":
+            dates.append(comment.created_at)
+    return max(dates)
+
+
+"""
+* This function obtains the latest version of the Bot/config.json file either from the repository if it is available, or 
+  from the local directory, otherwise. 
+* If emails for lingering issues are enabled in config.json (by having the "send-emails" field set to true and the 
+  "when-to-send" field set to "lingering" or "all"), then the function collects all the issues in the repository that are 
+  currently open, checks either their creation date, or their last modified date (depending on the value of the
+  "lingering_mode" field set in config.json: "creation-date"/"last-modified"), and determines whether they are lingering 
+  or not, depending on the value of the "lingering-issue-threshold"" field set in config.json, which specifies the 
+  number of days (the threshold) after an issue would be considered lingering. 
+* The issues that are found to be lingering are the ones that practitioners will be notified about, by sending them 
+  emails.
+"""
+def process_lingering_issues(git_integration, repository_owner, repository_name, lingering_check_frequency):
+
+    # Get a git connection as our bot
+    git_connection = Github(
+        login_or_token=git_integration.get_access_token(
+            git_integration.get_installation(repository_owner, repository_name).id
+        ).token
+    )
+
+    repo = git_connection.get_repo(f"{repository_owner}/{repository_name}")
+    # If repo has config.json file in the Bot directory, use it. Otherwise, use the config.json file locally in the bot
+    try:
+        config_file = repo.get_contents("Bot/config.json")
+        print("Using config file from the repo in the process_lingering_issues function", flush=True)
+        # Decode the file
+        config = json.loads(base64.b64decode(config_file.content).decode("utf-8"))
+    except:
+        with open("config.json", "r") as f:
+            config = json.load(f)
+            print("Using config file from local Bot directory in the process_lingering_issues function", flush=True)
+
+    # Send email if emails for lingering issues/all types of emails are enabled in config.json
+    if config["send-emails"] == True and (config["when-to-send"] == "lingering" or config["when-to-send"] == "all"):
+        print("Sending emails for lingering issues enabled", flush=True)
+        # Obtain all open issues in the current repository
+        issues = repo.get_issues(state="open")
+        email_info = config["email-info"]
+        lingering_mode = email_info["lingering-mode"]
+        lingering_issue_threshold = email_info["lingering-issue-threshold"]
+        print(f"Using lingering mode: {lingering_mode}", flush=True)
+        lingering_issues = []
+        # Iterate through all open issues in the current repository
+        for issue in issues:
+            if lingering_mode == "last-modified":
+                # Obtain the time when the current issue was last modified
+                issue_time = issue_last_modified(issue)
+            elif lingering_mode == "creation-date":
+                # Obtain the time of the issue creation
+                issue_time = issue.created_at
+            else:
+                """
+                Lingering mode is neither "last-modified", nor "creation-date", so we return early and we don't check
+                for lingering issues anymore.
+                """
+                return
+            # Obtain the current time and make it timezone-aware in UTC
+            current_time = datetime.utcnow().replace(tzinfo=pytz.UTC)
+            # Calculate how many days have passed since the issue has been created/has been last modified
+            days_passed = (current_time - issue_time).days
+            """
+            If the issue has been created/has not been modified for more days than the given threshold, add it to the
+            list of lingering issues.
+            """
+            if days_passed >= lingering_issue_threshold:
+                # Add lingering issue to the lingering_issues list
+                lingering_issues.append(issue)
+        print(f"Found {len(lingering_issues)} lingering issue(s)", flush=True)
+        # Send email for lingering issues, if any
+        if len(lingering_issues) > 0:
+            print("Sending email...", flush=True)
+            send_email(lingering_issues, config, 1)
+    else:
+        print(f"Sending emails for lingering issues disabled, checking again in {lingering_check_frequency} day(s)",
+              flush=True)
