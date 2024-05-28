@@ -74,9 +74,9 @@ Edit the `Bot/config.json` file to configure the bot's behavior:
     * "creation-date": if the bot should determine whether an issue is lingering or not based on the creation date of the issue
     * "last-modified": if the bot should determine whether an issue is lingering or not based on the last date when the issue has been modified (either by posting a comment, assigning a label, or any other kind of modification)
   - `recipients`: the list of email addresses of contributors that should receive email notifications, specified as a *list of strings*: \["emailAddress1", "emailAddress2", ...]
-  - `email-description-template`: The template strings used for the description of the bot-generated emails
-    * `label`: email description template (*string*) for email notifications about labels<br>
-    **Any string that you use for this email description template can contain any of the following placeholders, which the bot replaces with actual data:**
+  - `email-body-template`: The template strings used for the body of the bot-generated emails
+    * `label`: email body template (*string*) for email notifications about labels<br>
+    **Any string that you use for this email body template can contain any of the following placeholders, which the bot replaces with actual data:**
       - **/issue_label**: the label added by the bot to the issue
       - **/issue_number**: the number of the issue where the bot added the label
       - **/issue_author**: the author of the issue where the bot added the label
@@ -90,7 +90,7 @@ Edit the `Bot/config.json` file to configure the bot's behavior:
       ```JSON
       "label": "Hi,\n\n/issue_label has been identified in issue #/issue_number with title: '/issue_title' and description: '/issue_description', created by @/issue_author in the /issue_repository repository.\nLink to the issue: /issue_link\n\nThis is an automated email. Replies to this message will not be read."
       ```
-      will result in an email description in the following form: 
+      will result in an email body in the following form: 
       
       > Hi,
       >
@@ -98,10 +98,10 @@ Edit the `Bot/config.json` file to configure the bot's behavior:
       > Link to the issue: https://github.com/owner/test-repo/issues/4
       >
       > This is an automated email. Replies to this message will not be read.    
-    * `lingering`: email description template for email notifications about lingering issues, specified as a *list of two strings*:<br>
-        - 1st string in the list: main template string for the email description<br>
+    * `lingering`: email body template for email notifications about lingering issues, specified as a *list of two strings*:<br>
+        - 1st string in the list: main template string for the email body<br>
         **Any string that you use SHOULD contain one '{}' inside the string, for the lingering issues found in the repository.**
-        - 2nd string in the list: template string for each of the lingering issues to be added to the email description<br> 
+        - 2nd string in the list: template string for each of the lingering issues to be added to the email body<br> 
         **Any string that you use can contain any of the following placeholders, which the bot replaces with actual data:**
           - **/issue_number**: the number of the lingering issue
           - **/issue_author**: the author of the lingering issue
@@ -118,7 +118,7 @@ Edit the `Bot/config.json` file to configure the bot's behavior:
             "- #/issue_number: '/issue_title'. The issue has been created on /issue_created_at, and it has been last modified on /issue_updated_at\n"
         ]
         ```
-        will result in an email description in the following form:
+        will result in an email body in the following form:
         > Hi,
         >
         > The following lingering issues have been identified: <br>
@@ -149,10 +149,10 @@ Edit the `Bot/config.json` file to configure the bot's behavior:
     "lingering-issue-threshold": 30,
     "lingering-mode": "last-modified",
     "recipients" : [
-        "contributor1@gmail.com",
-        "contributor2@yahoo.com"
+      "contributor1@gmail.com",
+      "contributor2@yahoo.com"
     ],
-    "email-description-template": {
+    "email-body-template": {
       "label": "Hi,\n\n/issue_label has been identified in issue #/issue_number with title: '/issue_title' and description: '/issue_description', created by @/issue_author in the /issue_repository repository.\n Link to the issue: /issue_link\n\n This is an automated email. Replies to this message will not be read.",
       "lingering": [
         "Hi,\n\nThe following lingering issues have been identified:\n{}\nThis is an automated email. Replies to this message will not be read.",
