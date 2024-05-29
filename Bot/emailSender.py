@@ -17,12 +17,18 @@ bot_name = 'Issue Classification Bot'
 email_server = 'smtp.gmail.com'
 email_server_port = 465
 
-# Template string formatting function for replacing placeholders in the string
+
+# Template string formatting function for replacing placeholders with actual data
 def format_template(issue, template, label=None):
+    """
+    Also handling the edge case where some issues might not have a description (body), but the template string specified
+    in the Bot/config.json for lingering issues uses the /issue_description placeholder, in which case the placeholder
+    will be replaced with the string 'None' in the generated email body, to avoid any errors.
+    """
     formatted_template = (template.replace('/issue_number', str(issue.number))
                                   .replace('/issue_author', issue.user.login)
                                   .replace('/issue_title', issue.title)
-                                  .replace('/issue_description', issue.body)
+                                  .replace('/issue_description', issue.body if issue.body is not None else "None")
                                   .replace('/issue_link', issue.html_url)
                                   .replace('/issue_repository', issue.repository.name)
                                   .replace('/issue_updated_at', str(issue.updated_at))
@@ -30,6 +36,34 @@ def format_template(issue, template, label=None):
     if label:
         formatted_template = formatted_template.replace('/issue_label', label)
     return formatted_template
+
+
+# Prepare email content for label case
+def prepare_label_email(issue_list, email_info, label):
+    # Obtain the email body and email subject templates for emails concerning bot-generated labels
+    body = email_info['email-body-template']['label']
+    subject = email_info['email-subject-template']['label']
+    # Obtain the relevant issue (and the only one) from the provided list of issues
+    issue = issue_list[0]
+    # Replace placeholders in the email body template with actual data from the label and issue
+    formatted_body = format_template(issue, body, label)
+    # MIMEText used to create the email object
+    return MIMEText(formatted_body), subject
+
+
+# Prepare email content for lingering case
+def prepare_lingering_email(issue_list, email_info):
+    # Obtain the email body and email subject templates for emails concerning lingering issues identified by the bot
+    body_main = email_info['email-body-template']['lingering'][0]
+    body_issue = email_info['email-body-template']['lingering'][1]
+    subject = email_info['email-subject-template']['lingering']
+    # Replace placeholders in the lingering issue template with actual data from the issue, for each of the lingering issues identified by the bot
+    formatted_body_issues = "".join([format_template(issue, body_issue) for issue in issue_list])
+    # Replace the '{}' in the main template string for the email body with the string above
+    formatted_body_main = body_main.format(formatted_body_issues)
+    # MIMEText used to create the email object
+    return MIMEText(formatted_body_main), subject
+
 
 # Mail sending function
 def send_email(issue_list, config, case, label=None):
@@ -66,15 +100,7 @@ def send_email(issue_list, config, case, label=None):
         if (email_info["which-labels"] == "all"
                 or (email_info["which-labels"] == "except" and label not in email_info["except-labels"])
                 or (email_info["which-labels"] == "specific" and label in email_info["specific-labels"])):
-            body = email_info['email-body-template']['label']
-            subject = email_info['email-subject-template']['label']
-            issue = issue_list[0]
-
-            # Replace placeholders in the email body template with actual data from the label and issue
-            formatted_body = format_template(issue, body, label)
-
-            # MIMEText used to create the email object
-            email = MIMEText(formatted_body)
+            email, subject = prepare_label_email(issue_list, email_info, label)
         else:
             if email_info["which-labels"] == "except":
                 print(f"Generated label: {label} is contained in the 'except-labels' list specified in config.json,"
@@ -91,14 +117,7 @@ def send_email(issue_list, config, case, label=None):
     """
     # Lingering case
     if case == 1:
-        body_main = email_info['email-body-template']['lingering'][0]
-        body_issue = email_info['email-body-template']['lingering'][1]
-        subject = email_info['email-subject-template']['lingering']
-
-        formatted_body_issues = "".join([format_template(issue, body_issue) for issue in issue_list])
-        formatted_body_main = body_main.format(formatted_body_issues)
-
-        email = MIMEText(formatted_body_main)
+        email, subject = prepare_lingering_email(issue_list, email_info)
 
     # Feature under development case
     # if case == 2:

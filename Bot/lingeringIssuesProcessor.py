@@ -79,6 +79,8 @@ def process_lingering_issues(git_integration, repository_owner, repository_name,
                 Lingering mode is neither "last-modified", nor "creation-date", so we return early and we don't check
                 for lingering issues anymore.
                 """
+                print(f"Lingering mode: {lingering_mode} is not a valid mode, please refer to the bot documentation.",
+                      flush=True)
                 return
             # Obtain the current time and make it timezone-aware in UTC
             current_time = datetime.utcnow().replace(tzinfo=pytz.UTC)

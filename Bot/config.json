@@ -15,14 +15,14 @@
     "lingering-issue-threshold": 1,
     "lingering-mode": "last-modified",
     "recipients" : [
-        "recipient1@email.com",
-        "recipient2@email.com"
+      "recipient1@email.com",
+      "recipient2@email.com"
     ],
     "email-body-template": {
       "label": "Hi,\n\n/issue_label has been identified in issue #/issue_number with title: '/issue_title' and description: '/issue_description', created by @/issue_author in the /issue_repository repository.\nLink to the issue: /issue_link\n\nThis is an automated email. Replies to this message will not be read.",
       "lingering": [
-          "Hi,\n\nThe following lingering issues have been identified:\n{}\nThis is an automated email. Replies to this message will not be read.",
-          "- #/issue_number: '/issue_title'. The issue has been created on /issue_created_at, and it has been last modified on /issue_updated_at\n"
+        "Hi,\n\nThe following lingering issues have been identified:\n{}\nThis is an automated email. Replies to this message will not be read.",
+        "- #/issue_number: '/issue_title'. The issue has been created on /issue_created_at, and it has been last modified on /issue_updated_at\n"
       ]
     },
     "email-subject-template": {
