@@ -57,33 +57,33 @@ def process_lingering_issues(git_integration, repository_owner, repository_name,
             print("Using config file from local Bot directory in the process_lingering_issues function", flush=True)
 
     # Send email if emails for lingering issues/all types of emails are enabled in config.json
-    if config["send-emails"] == True and (config["when-to-send"] == "lingering" or config["when-to-send"] == "all"):
+    if config["send-emails"] == True and config["when-to-send"] in ["lingering", "all"]:
         print("Sending emails for lingering issues enabled", flush=True)
         # Obtain all open issues in the current repository
         issues = repo.get_issues(state="open")
         email_info = config["email-info"]
-        lingering_mode = email_info["lingering-mode"]
         lingering_issue_threshold = email_info["lingering-issue-threshold"]
+        lingering_mode = email_info["lingering-mode"]
+        # Determine the appropriate function to get the issue time based on lingering_mode
+        if lingering_mode == "last-modified":
+            get_issue_time = lambda issue: issue_last_modified(issue)
+        elif lingering_mode == "creation-date":
+            get_issue_time = lambda issue: issue.created_at
+        else:
+            """
+            Lingering mode is neither "last-modified", nor "creation-date", so we return early and we don't check for 
+            lingering issues anymore.
+            """
+            print(f"Lingering mode: {lingering_mode} is not a valid mode, please refer to the bot documentation.",
+                  flush=True)
+            return
         print(f"Using lingering mode: {lingering_mode}", flush=True)
+        # Obtain the current time and make it timezone-aware in UTC
+        current_time = datetime.utcnow().replace(tzinfo=pytz.UTC)
         lingering_issues = []
         # Iterate through all open issues in the current repository
         for issue in issues:
-            if lingering_mode == "last-modified":
-                # Obtain the time when the current issue was last modified
-                issue_time = issue_last_modified(issue)
-            elif lingering_mode == "creation-date":
-                # Obtain the time of the issue creation
-                issue_time = issue.created_at
-            else:
-                """
-                Lingering mode is neither "last-modified", nor "creation-date", so we return early and we don't check
-                for lingering issues anymore.
-                """
-                print(f"Lingering mode: {lingering_mode} is not a valid mode, please refer to the bot documentation.",
-                      flush=True)
-                return
-            # Obtain the current time and make it timezone-aware in UTC
-            current_time = datetime.utcnow().replace(tzinfo=pytz.UTC)
+            issue_time = get_issue_time(issue)
             # Calculate how many days have passed since the issue has been created/has been last modified
             days_passed = (current_time - issue_time).days
             """

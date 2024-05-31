@@ -77,7 +77,7 @@ def label_issue(issue, config, label=None):
         # Add the label to the issue
         issue.add_to_labels(label)
         # Send email if emails for labels/all types of emails are enabled in config.json
-        if config["send-emails"] == True and (config["when-to-send"] == "label" or config["when-to-send"] == "all"):
+        if config["send-emails"] == True and config["when-to-send"] in ["label", "all"]:
             send_email([issue], config, 0, label)
     else:
         # Simply add the label to the issue (for custom labels)
@@ -97,7 +97,7 @@ def label_title_and_desc(config, data, headers, issue, url):
     issue.add_to_labels("title: " + title_label)
     issue.add_to_labels("description: " + description_label)
     # Send email if emails for labels/all types of emails are enabled in config.json
-    if config["send-emails"] == True and (config["when-to-send"] == "label" or config["when-to-send"] == "all"):
+    if config["send-emails"] == True and config["when-to-send"] in ["label", "all"]:
         if title_label == description_label:
             # Single email if the labels generated for both the title and the description of the issue are identical
             send_email([issue], config, 0, title_label)
