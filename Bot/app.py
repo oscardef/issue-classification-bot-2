@@ -107,7 +107,7 @@ def label_title_and_desc(config, data, headers, issue, url):
 
 def handle_issue_comment_event(repo, payload, config):
     commenter = payload["comment"]["user"]["login"]
-    if commenter == "technical-debt-mitigation-bot[bot]":
+    if commenter == "issue-classification-bot[bot]":
         return "ok"
 
     comment = repo.get_issue(number=payload["issue"]["number"]).get_comment(

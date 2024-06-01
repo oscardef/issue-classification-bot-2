@@ -15,10 +15,10 @@ from emailSender import send_email
 def issue_last_modified(issue):
     dates = [issue.created_at]
     for event in issue.get_events():
-        if (not event.actor) or (event.actor.login != "technical-debt-mitigation-bot[bot]"):
+        if (not event.actor) or (event.actor.login != "issue-classification-bot[bot]"):
             dates.append(event.created_at)
     for comment in issue.get_comments():
-        if comment.user.login != "technical-debt-mitigation-bot[bot]":
+        if comment.user.login != "issue-classification-bot[bot]":
             dates.append(comment.created_at)
     return max(dates)
 
