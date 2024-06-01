@@ -24,32 +24,30 @@ git_integration = GithubIntegration(
     app_key,
 )
 
-# Read the local bot configuration file
-with open("config.json", "r") as f:
-    configuration_initial = json.load(f)
+# Get the list of installations of the bot's Github App
+installations = git_integration.get_installations()
 
-"""
-* Get the values of the "repository-owner" and "repository-name" fields from the local Bot/config.json file opened at 
-  the startup of the bot application. 
-* Make sure to have these fields set correctly to the GitHub username of the owner and the repository where the bot is 
-  installed and used, BEFORE the bot is started.
-* After this point, the bot will only use the most recent config.json file from the repository (or from the local 
-  directory, if it does not exist in the repository) for every action that it performs. 
-* Please note that the "repository-owner" and "repository-name" fields must not be modified while the bot is running (as 
-  it will not have any effect, anyway).  
-* The values of all the other fields of the Bot/config.json (in the repository and/or in the local directory) can be 
-  safely modified while the bot is running, and these changes will be reflected in the bot next time it performs an 
-  action (label an issue/check for lingering issues/etc.).
-"""
-repository_owner = configuration_initial["repository-owner"]
-repository_name = configuration_initial["repository-name"]
+repositories_info = []
+
+# Obtain details about each installation
+for installation in installations:
+    # Obtain the id of each installation of the GitHub App
+    installation_id = installation.id
+    # Obtain the repositories where the bot is installed
+    repositories = installation.get_repos()
+    for repository in repositories:
+        """
+        Create a list containing the repositories where the bot is installed, the owners of the repositories, and the
+        id of each of the installations of the GitHub App.
+        """
+        repositories_info.append((repository.name, repository.owner.login, installation_id))
 
 # Scheduling the processing of lingering issues
 scheduler = BackgroundScheduler()
 # Schedule the function process_lingering_issues to run every 1 day from the moment the bot is started
 lingering_check_frequency = 1
 scheduler.add_job(func=process_lingering_issues, trigger='interval', days=lingering_check_frequency,
-                  args=(git_integration, repository_owner, repository_name, lingering_check_frequency))
+                  args=(git_integration, repositories_info, lingering_check_frequency))
 scheduler.start()
 
 
@@ -190,13 +188,13 @@ def bot():
     # If repo has config.json file in the Bot directory, use it. Otherwise, use the config.json file locally in the bot
     try:
         config_file = repo.get_contents("Bot/config.json")
-        print("Using config file from the repo", flush=True)
+        print("Using config file from the repository", flush=True)
         # Decode the file
         config = json.loads(base64.b64decode(config_file.content).decode("utf-8"))
     except:
         with open("config.json", "r") as f:
             config = json.load(f)
-            print("Using config file from local Bot directory", flush=True)
+            print("Using config file from the local Bot directory as it is not present in the repository", flush=True)
 
     if payload_type == "issue_comment":
         return handle_issue_comment_event(repo, payload, config)
