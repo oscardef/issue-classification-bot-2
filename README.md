@@ -46,8 +46,6 @@ Interact with the *Issue Classification Bot* by using the following commands in 
 
 ## Configuring the Bot
 Edit the `Bot/config.json` file to configure the bot's behavior:
-- `repository-owner`: the GitHub username of the owner of the repository where the bot is installed (*string*)
-- `repository-name`: the name of the repository where the bot is installed (*string*)
 - `payload-type`: Choose between:
   * "title":       to set whether the bot's ML model should generate a label based on the title of the issue
   * "description": to set whether the bot's ML model should generate a label based on the description of the issue
@@ -133,8 +131,6 @@ Edit the `Bot/config.json` file to configure the bot's behavior:
 ### Example `config.json`:
 ```JSON
 {
-  "repository-owner": "oscardef",
-  "repository-name": "issue-classification-bot-2",
   "payload-type": "description",
   "endpoint": "http://model:8000/models/Model1_IssueTracker_Li2022_ESEM",
   "label-location": "label",
