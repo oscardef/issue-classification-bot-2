@@ -1,5 +1,5 @@
 Here are the commands I understand:
- - \"/tdbot label\" labels an issue using a ML model.
+ - \"/tdbot label\" labels an issue using the ML model.
 
  - \"/tdbot label \<label\>\" labels an issue with the given label.
  

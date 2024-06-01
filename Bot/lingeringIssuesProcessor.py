@@ -24,7 +24,7 @@ def issue_last_modified(issue):
 
 
 """
-* For each repository that has the bot's Github App is installed:
+* For each repository that has the bot's GitHub App is installed:
     + This function obtains the latest version of the Bot/config.json file either from the repository if it is available, 
       or from the local directory, otherwise. 
     + If emails for lingering issues are enabled in config.json (by having the "send-emails" field set to true and the 

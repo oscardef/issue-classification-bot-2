@@ -24,7 +24,7 @@ git_integration = GithubIntegration(
     app_key,
 )
 
-# Get the list of installations of the bot's Github App
+# Get the list of installations of the bot's GitHub App
 installations = git_integration.get_installations()
 
 repositories_info = []
@@ -146,8 +146,8 @@ def handle_issue_creation_event(repo, payload, config):
         return "ok"
     if config["initial-message"] == True:
         issue.create_comment(
-            "This issue seems to document technical debt.\n\n"
-            'You can label it with "/tdbot label"'
+            ":robot: **Issue Classification Bot** is active on this repository.\n\n"
+            'Learn what commands you can use in issues by commenting "/tdbot help"'
         )
     return "ok"
 
