@@ -19,22 +19,24 @@ email_server_port = 465
 
 
 # Template string formatting function for replacing placeholders with actual data
-def format_template(issue, template, label=None):
+def format_template(issue, template, label_or_feature=None):
     """
     Also handling the edge case where some issues might not have a description (body), but the template string specified
     in the Bot/config.json for lingering issues uses the /issue_description placeholder, in which case the placeholder
-    will be replaced with the string 'None' in the generated email body, to avoid any errors.
+    will be replaced with the empty string in the generated email body, to avoid any errors.
     """
     formatted_template = (template.replace('/issue_number', str(issue.number))
                                   .replace('/issue_author', issue.user.login)
                                   .replace('/issue_title', issue.title)
-                                  .replace('/issue_description', issue.body if issue.body is not None else "None")
+                                  .replace('/issue_description', issue.body or "")
                                   .replace('/issue_link', issue.html_url)
                                   .replace('/issue_repository', issue.repository.name)
                                   .replace('/issue_updated_at', str(issue.updated_at))
                                   .replace('/issue_created_at', str(issue.created_at)))
-    if label:
-        formatted_template = formatted_template.replace('/issue_label', label)
+    if label_or_feature:
+        formatted_template = (formatted_template.replace('/issue_label', label_or_feature)
+                                                .replace('/feature', label_or_feature))
+
     return formatted_template
 
 
@@ -63,6 +65,20 @@ def prepare_lingering_email(issue_list, email_info):
     formatted_body_main = body_main.format(formatted_body_issues)
     # MIMEText used to create the email object
     return MIMEText(formatted_body_main), subject
+
+
+# Prepare email content for feature under development case
+def prepare_feature_email(issue_list, email_info):
+    # Obtain the email body and email subject templates for emails concerning the feature under development
+    body = email_info['email-body-template']['feature']
+    subject = email_info['email-subject-template']['feature']
+    feature = email_info['feature-under-development']
+    # Obtain the relevant issue (and the only one) from the provided list of issues
+    issue = issue_list[0]
+    # Replace placeholders in the email body template with actual data from the feature and issue
+    formatted_body = format_template(issue, body, feature)
+    # MIMEText used to create the email object
+    return MIMEText(formatted_body), subject
 
 
 # Mail sending function
@@ -119,9 +135,36 @@ def send_email(issue_list, config, case, label=None):
     if case == 1:
         email, subject = prepare_lingering_email(issue_list, email_info)
 
+    """
+    Create the email message for a feature under development:
+    - if the practitioner manually assigns a label to an issue (using "/tdbot label <label>"), and the label matches the 
+      feature under development specified in the "feature-under-development" field of the Bot/config.json file
+    OR
+    - if the practitioner creates a new issue, and the feature under development (specified in the 
+      "feature-under-development" field of the Bot/config.json file) is mentioned inside the issue body
+    """
     # Feature under development case
-    # if case == 2:
-    # TO BE CREATED
+    if case == 2:
+        issue = issue_list[0]
+        if label:
+            if label==email_info["feature-under-development"]:
+                email, subject = prepare_feature_email(issue_list, email_info)
+            else:
+                print(f"Recently added label: {label} to issue #{issue.number} does not mention the feature under "
+                      "development", flush=True)
+                # Close the SMTP connection since no email will be sent
+                smtp.quit()
+                return
+        else:
+            # Case-insensitive check if the feature under development is contained in the body of the issue
+            if issue.body is not None and email_info["feature-under-development"].lower() in issue.body.lower():
+                email, subject = prepare_feature_email(issue_list, email_info)
+            else:
+                print(f"Newly created issue #{issue.number} does not mention the feature under development in its body",
+                      flush=True)
+                # Close the SMTP connection since no email will be sent
+                smtp.quit()
+                return
 
     email['From'] = bot_name
     email['To'] = ', '.join(recipients)

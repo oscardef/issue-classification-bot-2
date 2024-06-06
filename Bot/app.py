@@ -12,16 +12,16 @@ from lingeringIssuesProcessor import process_lingering_issues
 
 app = Flask(__name__)
 
-app_id = 821348
+github_app_id = 821348
 
 # Read the bot certificate
 with open("bot_key.pem", "r") as cert_file:
-    app_key = cert_file.read()
+    github_app_key = cert_file.read()
 
 # Create a GitHub integration instance
 git_integration = GithubIntegration(
-    app_id,
-    app_key,
+    github_app_id,
+    github_app_key,
 )
 
 # Get the list of installations of the bot's GitHub App
@@ -63,9 +63,13 @@ def label_issue(issue, config, label=None):
         if config["payload-type"] == "title":
             data["text"] = issue.title
         elif config["payload-type"] == "description":
-            data["text"] = issue.body
+            if issue.body is not None:
+                data["text"] = issue.body
+            else:
+                print("Issue does not have a description, no label generated", flush=True)
+                return
         elif config["payload-type"] == "merged":
-            data["text"] = issue.title + " " + issue.body
+            data["text"] = issue.title + (" " + issue.body if issue.body is not None else "")
         elif config["payload-type"] == "both":
             label_title_and_desc(config, data, headers, issue, url)
             return
@@ -75,11 +79,14 @@ def label_issue(issue, config, label=None):
         # Add the label to the issue
         issue.add_to_labels(label)
         # Send email if emails for labels/all types of emails are enabled in config.json
-        if config["send-emails"] == True and config["when-to-send"] in ["label", "all"]:
+        if config["send-emails"] is True and config["when-to-send"] in ["label", "all"]:
             send_email([issue], config, 0, label)
     else:
         # Simply add the label to the issue (for custom labels)
         issue.add_to_labels(label)
+        # Send email if emails for feature under development/all types of emails are enabled in config.json
+        if config["send-emails"] is True and config["when-to-send"] in ["feature", "all"]:
+            send_email([issue], config, 2, label)
 
 
 def label_title_and_desc(config, data, headers, issue, url):
@@ -87,17 +94,28 @@ def label_title_and_desc(config, data, headers, issue, url):
     result = requests.post(url, headers=headers, data=json.dumps(data)).json()
     label_location = config["label-location"]
     title_label = result[label_location]
-    data["text"] = issue.body
-    result = requests.post(url, headers=headers, data=json.dumps(data)).json()
-    label_location = config["label-location"]
-    description_label = result[label_location]
-    # Add the labels to the issue
+    # Add the label generated for the issue title to the issue
     issue.add_to_labels("title: " + title_label)
-    issue.add_to_labels("description: " + description_label)
+
+    description_label = None
+    if issue.body is not None:
+        data["text"] = issue.body
+        result = requests.post(url, headers=headers, data=json.dumps(data)).json()
+        label_location = config["label-location"]
+        description_label = result[label_location]
+        # Add the label generated for the issue description to the issue
+        issue.add_to_labels("description: " + description_label)
+    else:
+        print("Issue does not have a description, no description label generated", flush=True)
+
     # Send email if emails for labels/all types of emails are enabled in config.json
-    if config["send-emails"] == True and config["when-to-send"] in ["label", "all"]:
-        if title_label == description_label:
-            # Single email if the labels generated for both the title and the description of the issue are identical
+    if config["send-emails"] is True and config["when-to-send"] in ["label", "all"]:
+        if description_label is None or title_label == description_label:
+            """
+            Single email (for the title label) if the issue does not contain a description (and consequently, no 
+            description label is generated) or if the labels generated for both the title and the description of the 
+            issue are identical
+            """
             send_email([issue], config, 0, title_label)
         else:
             # Separate emails if the labels generated for the title and the description of the issue are different
@@ -131,6 +149,7 @@ def handle_issue_comment_event(repo, payload, config):
             issue.create_comment(help_message)
         else:
             issue.create_comment("I don't understand your command. Please try again.")
+
     return "ok"
 
 
@@ -140,15 +159,19 @@ def handle_issue_creation_event(repo, payload, config):
         return "ok"
 
     issue = repo.get_issue(number=payload["issue"]["number"])
-    # Check if the repo is enabled for auto labeling
-    if config["auto-label"] == True:
-        label_issue(issue, config)
-        return "ok"
-    if config["initial-message"] == True:
+    # Check if initial messages for issues is enabled in config.json
+    if config["initial-message"] is True:
         issue.create_comment(
             ":robot: **Issue Classification Bot** is active on this repository.\n\n"
             'Learn what commands you can use in issues by commenting "/tdbot help"'
         )
+    # Check if auto-labeling of issues is enabled in config.json
+    if config["auto-label"] is True:
+        label_issue(issue, config)
+    # Send email if emails for feature under development/all types of emails are enabled in config.json
+    if config["send-emails"] is True and config["when-to-send"] in ["feature", "all"]:
+        send_email([issue], config, 2)
+
     return "ok"
 
 
