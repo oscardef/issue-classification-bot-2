@@ -33,7 +33,7 @@ def format_template(issue, template, label_or_feature=None):
                                   .replace('/issue_repository', issue.repository.name)
                                   .replace('/issue_updated_at', str(issue.updated_at))
                                   .replace('/issue_created_at', str(issue.created_at)))
-    if label_or_feature:
+    if label_or_feature is not None:
         formatted_template = (formatted_template.replace('/issue_label', label_or_feature)
                                                 .replace('/feature', label_or_feature))
 
@@ -147,11 +147,11 @@ def send_email(issue_list, config, case, label=None):
     if case == 2:
         issue = issue_list[0]
         if label:
-            if label==email_info["feature-under-development"]:
+            if label == email_info["feature-under-development"]:
                 email, subject = prepare_feature_email(issue_list, email_info)
             else:
                 print(f"Recently added label: {label} to issue #{issue.number} does not mention the feature under "
-                      "development", flush=True)
+                      "development, no email sent", flush=True)
                 # Close the SMTP connection since no email will be sent
                 smtp.quit()
                 return
@@ -160,8 +160,8 @@ def send_email(issue_list, config, case, label=None):
             if issue.body is not None and email_info["feature-under-development"].lower() in issue.body.lower():
                 email, subject = prepare_feature_email(issue_list, email_info)
             else:
-                print(f"Newly created issue #{issue.number} does not mention the feature under development in its body",
-                      flush=True)
+                print(f"Newly created issue #{issue.number} does not mention the feature under development in its body"
+                      " no email sent", flush=True)
                 # Close the SMTP connection since no email will be sent
                 smtp.quit()
                 return

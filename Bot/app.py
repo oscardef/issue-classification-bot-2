@@ -24,36 +24,18 @@ git_integration = GithubIntegration(
     github_app_key,
 )
 
-# Get the list of installations of the bot's GitHub App
-installations = git_integration.get_installations()
-
-repositories_info = []
-
-# Obtain details about each installation
-for installation in installations:
-    # Obtain the id of each installation of the GitHub App
-    installation_id = installation.id
-    # Obtain the repositories where the bot is installed
-    repositories = installation.get_repos()
-    for repository in repositories:
-        """
-        Create a list containing the repositories where the bot is installed, the owners of the repositories, and the
-        id of each of the installations of the GitHub App.
-        """
-        repositories_info.append((repository.name, repository.owner.login, installation_id))
-
 # Scheduling the processing of lingering issues
 scheduler = BackgroundScheduler()
 # Schedule the function process_lingering_issues to run every 1 day from the moment the bot is started
 lingering_check_frequency = 1
 scheduler.add_job(func=process_lingering_issues, trigger='interval', days=lingering_check_frequency,
-                  args=(git_integration, repositories_info, lingering_check_frequency))
+                  args=(git_integration, lingering_check_frequency))
 scheduler.start()
 
 
 def label_issue(issue, config, label=None):
     if label is None:
-        # Call the model API to get the label
+        # Call the ML model API to get the label
         url = config["endpoint"]
         headers = {
             "accept": "application/json",
@@ -128,10 +110,8 @@ def handle_issue_comment_event(repo, payload, config):
     if commenter == "issue-classification-bot[bot]":
         return "ok"
 
-    comment = repo.get_issue(number=payload["issue"]["number"]).get_comment(
-        payload["comment"]["id"]
-    )
     issue = repo.get_issue(number=payload["issue"]["number"])
+    comment = issue.get_comment(payload["comment"]["id"])
 
     # Comment body will be a command like "/tdbot label", "/tdbot help", etc. So we need to parse it
     command = comment.body.split(" ")
@@ -195,8 +175,13 @@ def bot():
     # Get the event payload
     payload = request.json
 
-    # Check if the event is a GitHub issue comment creation event
+    # Obtain the type of GitHub event
     payload_type = request.headers.get("X-GitHub-Event")
+
+    # Check if the event is a GitHub App install/uninstall event
+    if payload_type in ["installation", "installation_repositories"]:
+        return "ok"
+
     owner = payload["repository"]["owner"]["login"]
     repo_name = payload["repository"]["name"]
 
@@ -219,6 +204,7 @@ def bot():
             config = json.load(f)
             print("Using config file from the local Bot directory as it is not present in the repository", flush=True)
 
+    # Check if the event is a GitHub issue comment creation or issue creation event
     if payload_type == "issue_comment":
         return handle_issue_comment_event(repo, payload, config)
     elif payload_type == "issues":

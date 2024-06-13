@@ -7,8 +7,8 @@ from datetime import datetime
 from emailSender import send_email
 
 """
-* Determine the last time an issue has been modified (by a user, not by the bot), either by creating a comment on it or
-  some other type of event.
+* Function to determine the last time an issue has been modified (by a user, not by the bot), either by creating a 
+  comment on it or some other type of event.
 * It could be the case that the issue has not been touched since it has been created, so the time of last modification
   would be, in this case, the time when the issue has been created.
 """
@@ -24,6 +24,35 @@ def issue_last_modified(issue):
 
 
 """
+* Function to obtain the installation IDs of the bot's GitHub App, together with the owners and repositories where it is 
+  installed.
+* This function is called every time the processing of lingering issues is scheduled, in order to obtain the most recent
+  list of installations, and to allow practitioners to install/unsuspend or uninstall/suspend the bot's GitHub App while 
+  the bot is running.
+"""
+def obtain_installations(git_integration):
+    # Get the list of installations of the bot's GitHub App
+    installations = git_integration.get_installations()
+
+    repositories_info = []
+
+    # Obtain details about each installation
+    for installation in installations:
+        # Obtain the ID of each installation of the GitHub App
+        installation_id = installation.id
+        # Obtain the repositories where the bot is installed
+        repositories = installation.get_repos()
+        for repository in repositories:
+            """
+            Create a list containing the repositories where the bot is installed, the owners of the repositories, and the
+            ID of each of the installations of the GitHub App.
+            """
+            repositories_info.append((repository.name, repository.owner.login, installation_id))
+
+    return repositories_info
+
+
+"""
 * For each repository that has the bot's GitHub App is installed:
     + This function obtains the latest version of the Bot/config.json file either from the repository if it is available, 
       or from the local directory, otherwise. 
@@ -36,7 +65,10 @@ def issue_last_modified(issue):
     + The issues that are found to be lingering are the ones that practitioners will be notified about, by sending them 
       emails.
 """
-def process_lingering_issues(git_integration, repositories_info, lingering_check_frequency):
+def process_lingering_issues(git_integration, lingering_check_frequency):
+
+    repositories_info = obtain_installations(git_integration)
+
     # Iterate over each repository that has the bot's GitHub App installed
     for repository_name, repository_owner, installation_id in repositories_info:
         print(f"Processing lingering issues in the {repository_name} repository...", flush=True)
