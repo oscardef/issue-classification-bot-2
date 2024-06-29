@@ -128,7 +128,9 @@ def handle_issue_comment_event(repo, payload, config):
                 help_message = f.read()
             issue.create_comment(help_message)
         else:
-            issue.create_comment("I don't understand your command. Please try again.")
+            issue.create_comment(
+                "I don't understand your command. Please try again or comment \"/tdbot help\" to learn about the available commands."
+            )
 
     return "ok"
 
@@ -143,7 +145,8 @@ def handle_issue_creation_event(repo, payload, config):
     if config["initial-message"] is True:
         issue.create_comment(
             ":robot: **Issue Classification Bot** is active on this repository.\n\n"
-            'Learn what commands you can use in issues by commenting "/tdbot help"'
+            'Learn what commands you can use in issues by commenting "/tdbot help"\n\n'
+            'Alternatively, refer to the [documentation](https://github.com/oscardef/issue-classification-bot-2/blob/email-sender/README.md) for further information about the bot.'
         )
     # Check if auto-labeling of issues is enabled in config.json
     if config["auto-label"] is True:

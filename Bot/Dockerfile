@@ -17,5 +17,5 @@ EXPOSE 5001
 ENV NAME World
 
 # Run app.py when the container launches
-CMD ["gunicorn", "--workers", "9", "-b", "0.0.0.0:5001", "--preload", "app:app"]
+CMD ["gunicorn", "-b", "0.0.0.0:5001", "--preload", "app:app"]
 

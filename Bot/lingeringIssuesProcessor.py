@@ -89,7 +89,7 @@ def process_lingering_issues(git_integration, lingering_check_frequency):
                 print("Using config file from the local Bot directory as it is not present in the repository", flush=True)
 
         # Send email if emails for lingering issues/all types of emails are enabled in config.json
-        if config["send-emails"] == True and config["when-to-send"] in ["lingering", "all"]:
+        if config["send-emails"] is True and config["when-to-send"] in ["lingering", "all"]:
             print("Sending emails for lingering issues enabled", flush=True)
             # Obtain all open issues in the current repository
             issues = repo.get_issues(state="open")
