@@ -26,6 +26,7 @@ def format_template(issue, template, label_or_feature=None):
     formatted_template = (template.replace('/issue_number', str(issue["number"]))
                                   .replace('/issue_author', issue["user"]["login"])
                                   .replace('/issue_title', issue["title"])
+                                  # Need to format
                                   .replace('/issue_description', issue["body"] or "")
                                   .replace('/issue_link', issue["html_url"])
                                   .replace('/issue_repository', issue["repository_url"].split('/')[-1])
@@ -135,7 +136,7 @@ def send_email(issue_list, config, case, label=None):
             if label == email_info["feature-under-development"]:
                 email, subject = prepare_feature_email(issue_list, email_info)
             else:
-                print(f"Recently added label: {label} to issue #{issue["number"]} does not mention the feature under "
+                print(f"Recently added label: {label} to issue #{issue['number']} does not mention the feature under "
                       "development, no email sent", flush=True)
                 return
         else:
@@ -143,11 +144,13 @@ def send_email(issue_list, config, case, label=None):
             if issue["body"] is not None and email_info["feature-under-development"].lower() in issue["body"].lower():
                 email, subject = prepare_feature_email(issue_list, email_info)
             else:
-                print(f"Newly created issue #{issue["number"]} does not mention the feature under development in its body"
+                print(f"Newly created issue #{issue['number']} does not mention the feature under development in its body,"
                       " no email sent", flush=True)
                 return
 
     email['From'] = bot_name
     email['To'] = ', '.join(recipients)
     email['Subject'] = subject
+
+    print("Email sent successfully!", flush=True)
     
