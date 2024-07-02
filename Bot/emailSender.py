@@ -160,7 +160,7 @@ def send_email(issue_list, config, case, label=None):
             if issue.body is not None and email_info["feature-under-development"].lower() in issue.body.lower():
                 email, subject = prepare_feature_email(issue_list, email_info)
             else:
-                print(f"Newly created issue #{issue.number} does not mention the feature under development in its body"
+                print(f"Newly created issue #{issue.number} does not mention the feature under development in its body,"
                       " no email sent", flush=True)
                 # Close the SMTP connection since no email will be sent
                 smtp.quit()

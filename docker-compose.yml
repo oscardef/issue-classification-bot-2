@@ -31,7 +31,7 @@ services:
 
   model:
     build:
-      context: ModelsBackend  # Replace with the actual path to your other service's directory
+      context: ModelsBackend
       dockerfile: Dockerfile
     ports:
       - "8000:8000"

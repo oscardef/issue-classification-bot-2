@@ -1,143 +1,120 @@
-# Replication Package for Automatic Identification of Self-Admitted Technical Debt from Four Different Sources
+# SATD Dataset in Issue Tracking Systems
 
 ##### Authors: Yikun Li, Mohamed Soliman, Paris Avgeriou
 
-
 ## Description of This Study
 
-Technical debt refers to taking shortcuts to achieve short-term goals while sacrificing the long-term maintainability and evolvability of software systems. A large part of technical debt is explicitly reported by the developers themselves; this is commonly referred to as Self-Admitted Technical Debt or SATD. Previous work has focused on identifying SATD from source code comments and issue trackers. However, there are no approaches available for automatically identifying SATD from other sources such as commit messages and pull requests, or by combining multiple sources. Therefore, we propose and evaluate an approach for automated SATD identification that integrates four sources: source code comments, commit messages, pull requests, and issue tracking systems. 
-Our findings show that our approach outperforms baseline approaches and achieves an average F1-score of 0.611 when detecting four types of SATD (i.e., code/design debt, requirement debt, documentation debt, and test debt) from the four aforementioned sources. Thereafter, we analyze 23.6M code comments, 1.3M commit messages, 3.7M issue sections, and 1.7M pull request sections to characterize SATD in 103 open-source projects. Furthermore, we investigate the SATD keywords and relations between SATD in different sources. The findings indicate, among others, that: 1) SATD is evenly spread among all sources; 2) issues and pull requests are the two most similar sources regarding the number of shared SATD keywords, followed by commit messages, and then followed by code comments; 3) there are four kinds of relations between SATD items in the different sources.
+Technical debt is a metaphor indicating sub-optimal solutions implemented for short-term benefits by sacrificing the long-term maintainability and evolvability of software. 
+A special type of technical debt is explicitly admitted by software engineers (e.g. using a TODO comment); this is called **Self-Admitted Technical Debt** or **SATD**.
+Most work on automatically identifying SATD focuses on source code comments.
+In addition to source code comments, issue tracking systems have shown to be another rich source of SATD, but there are no approaches specifically for automatically identifying SATD in issues.
+In this paper, we first create a training dataset by collecting and manually analyzing 4,200 issues (that break down to 23,180 sections of issues) from seven open-source projects (i.e., Camel, Chromium, Gerrit, Hadoop, HBase, Impala, and Thrift) using two popular issue tracking systems (i.e., Jira and Google Monorail).
+We then propose and optimize an approach for automatically identifying SATD in issue tracking systems using machine learning.
+Our findings indicate that: 1) our approach outperforms baseline approaches by a wide margin with regard to the F1-score; 2) transferring knowledge from suitable datasets can improve the predictive performance of our approach; 3) extracted SATD keywords are intuitive and potentially indicating types and indicators of SATD; 4) projects using different issue tracking systems have less common SATD keywords compared to projects using the same issue tracking system; 5) a small amount of training data is needed to achieve good accuracy.
 
 
 ## Structure of the Replication Package
 
-We have assembled a replication package that includes a **comprehensive SATD dataset**, comprised of 5,000 commit messages and 5,000 pull request sections gathered from 103 Apache open-source projects. Each entry is labeled as either non-SATD or with a specific type of SATD. Additionally, the package contains the **trained SATD detector** model to facilitate further research and analysis.
+The package contains a **trained SATD detector model** that can be used for further research and analysis. Additionally, we have assembled a replication package that includes a **dataset of SATD from issue tracking systems**. This dataset contains 23,180 issue sections (including 3,277 SATD issue sections) from seven large open-source projects across two ecosystems: Apache and Google. We define each part of an issue, such as summary, description, or comment, as an issue section. The number of different types/indicators of SATD is shown below:
 
-```
-├── LICENSE
-├── README.md
-├── SATD Detector
-│   ├── requirements.txt
-│   └── satd_detector.py
-├── SATD Keyowrds
-│   ├── SATD Keyowrds for different types of SATD
-│   │   ├── Keywords for code or design debt.txt
-│   │   ├── Keywords for documentation debt.txt
-│   │   ├── Keywords for requirement debt.txt
-│   │   └── Keywords for test debt.txt
-│   └── SATD Keywords for different sources
-│       ├── Keywords for code comments.txt
-│       ├── Keywords for commit messages.txt
-│       ├── Keywords for issues.txt
-│       └── Keywords for pull requests.txt
-├── satd-dataset-code_comments.csv
-├── satd-dataset-commit_messages.csv
-├── satd-dataset-issues.csv
-└── satd-dataset-pull_requests.csv
-```
+| Type of SATD       | Indicator                                             | Definition                                                                                                                                                                                            | Number |
+|--------------------|-------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------|
+| Architecture debt  | Violation of modularity                               | Because shortcuts were taken, multiple modules became inter-dependent, while they should be independent.                                                                                              | 46     |
+|                    | Using obsolete technology                             | Architecturally-significant technology has become obsolete.                                                                                                                                           | 41     |
+| Build debt         | Over- or under-declared dependencies                  | Under-declared dependencies: dependencies in upstream libraries are not declared and rely on dependencies in lower level libraries. Over-declared dependencies: unneeded dependencies are declared.   | 25     |
+|                    | Poor deployment practice                              | The quality of deployment is low that compile flags or build targets are not well organized.                                                                                                          | 39     |
+| Code debt          | Complex code                                          | Code has accidental complexity and requires extra refactoring action to reduce this complexity.                                                                                                       | 30     |
+|                    | Dead code                                             | Code is no longer used and needs to be removed.                                                                                                                                                       | 121    |
+|                    | Duplicated code                                       | Code that occurs more than once instead of as a single reusable function.                                                                                                                             | 40     |
+|                    | Low-quality code                                      | Code quality is low, for example because it is unreadable, inconsistent, or violating coding conventions.                                                                                             | 856    |
+|                    | Multi-thread correctness                              | Thread-safe code is not correct and may potentially result in synchronization problems or efficiency problems.                                                                                        | 40     |
+|                    | Slow algorithm                                        | A non-optimal algorithm is utilized that runs slowly.                                                                                                                                                 | 159    |
+| Defect debt        | Uncorrected known defects                             | Defects are found by developers but ignored or deferred to be fixed.                                                                                                                                  | 25     |
+| Design debt        | Non-optimal decisions                                 | Non-optimal design decisions are adopted.                                                                                                                                                             | 935    |
+| Documentation debt | Low-quality documentation                             | The documentation has been updated reflecting the changes in the system, but quality of updated documentation is low.                                                                                 | 342    |
+|                    | Outdated documentation                                | A function or class is added, removed, or modified in the system, but the documentation has not been updated to reflect the change.                                                                   | 144    |
+| Requirement debt   | Requirements partially implemented                    | Requirements are implemented, but some are not fully implemented.                                                                                                                                     | 67     |
+|                    | Non-functional requirements not being fully satisfied | Non-functional requirements (e.g. availability, capacity, concurrency, extensibility), as described by scenarios, are not fully satisfied.                                                            | 29     |
+| Test debt          | Expensive tests                                       | Tests are expensive, resulting in slowing down testing activities. Extra refactoring actions are needed to simplify tests.                                                                            | 28     |
+|                    | Flaky tests                                           | Tests fail or pass intermittently for the same configuration.                                                                                                                                         | 83     |
+|                    | Lack of tests                                         | A function is added, but no tests are added to cover the new function.                                                                                                                                | 158    |
+|                    | Low coverage                                          | Only part of the source code is executed during testing.                                                                                                                                              | 69     |
 
 
 ## Getting Started With SATD Detector
 
 ### Requirements
 
-- fasttext
 - nltk
-- torch
+- fasttext
+- numpy
+- tensorflow
 
 
 ### Identifying SATD
 
-1. Download the model weight and word embedding files from [LINK](https://doi.org/10.5281/zenodo.6783762).
-2. Unzip the fasttext_word_embeddings.bin.zip file.
-3. Replace the file path with the real path and run the following command:
+1. Download the model weight and word embedding files from [LINK](https://zenodo.org/record/7821209).
+2. Replace the file path with the real path and run the following command:
 
 ```bash
-python satd_detector.py 
-  --embed-vectors "{PATH}/fasttext_issue_300.bin"
-  --snapshot "{PATH}/satd_detector.pt"
+python3 satd_detector.py 
+      --weight_file "{PATH}/satd_detector_for_issues.hdf5" 
+      --word_embedding_file "{PATH}/fasttext_issue_300.bin" 
 ```
 
 
 ### Example Output
 
 ```
-Source type: code_comment
-Text: TODO: support multiple signers
-Predicted result: requirement-debt
-
-Source type: code_comment
-Text: TODO: please add some javadoc
-Predicted result: documentation-debt
-
-Source type: code_comment
-Text: TODO: lack of tests
-Predicted result: test-debt
-
-Source type: issue
-Text: I would like to remove this as its no longer needed.
-Predicted result: code|design-debt
-
-Source type: issue
+1/1 [==============================] - 0s 117ms/step
 Text: to make their code more readable. I would like to see something like this in the API.
-Predicted result: code|design-debt
+Predicted label: SATD
 
-Source type: issue
-Text: To experiment with transfer learning, we first combine all the issue sections
-Predicted result: non-SATD
+1/1 [==============================] - 0s 8ms/step
+Text: cluster service : add a cluster service based on JGroups Raft
+Predicted label: non-SATD
 
-Source type: issue
-Text: We need to update this documentation
-Predicted result: documentation-debt
+1/1 [==============================] - 0s 7ms/step
+Text: Would you be able to build an unit test of this sample code so we can take that and add to the tests of camel-cxf and work on a fix.
+Predicted label: SATD
 
-Source type: issue
-Text: There are unimplemented requirements
-Predicted result: requirement-debt
+1/1 [==============================] - 0s 13ms/step
+Text: I'm raising a new Jira for this.
+Predicted label: non-SATD
 
-Source type: issue
-Text: This is a good patch
-Predicted result: non-SATD
+1/1 [==============================] - 0s 9ms/step
+Text: We also need to update the mail wiki page with this feature.
+Predicted label: SATD
 
-Source type: commit_message
-Text: Get rid of some superfluous informational messages
-Predicted result: code|design-debt
+1/1 [==============================] - 0s 8ms/step
+Text: Fix pom.xml files to support nexus based release process
+Predicted label: non-SATD
 
-Source type: commit_message
-Text: fix bugs in SystemML - removed XXX
-Predicted result: non-SATD
-
-Source type: commit_message
-Text: fix typo in error message
-Predicted result: documentation-debt
-
-Source type: pull_request
-Text: nit: use local variable if possible
-Predicted result: code|design-debt
-
-Source type: pull_request
-Text: Use the Python Postinstall implementation by default
-Predicted result: non-SATD
+1/1 [==============================] - 0s 10ms/step
+Text: The component docs are in adoc files with the source code - the wiki is dead so don't update there. Make sure to fix/update in adoc, and if you want you can do wiki too. But wiki only changes will be lost in the future when wiki is discarded completely
+Predicted label: SATD
 ```
 
 
 ## Paper
 
-Latest version available on [arXiv](https://arxiv.org/abs/2202.02387)
+Latest version available on [arXiv](https://arxiv.org/abs/2202.02180)
 
-If you use this dataset to support your research and publish a paper, we encourage you to cite the following paper in your publication:
+Please adequately refer to this paper any time this dataset is being used. If you publish a paper where this dataset
+helps your research, we encourage you to cite the following paper in your publication:
 
 ```
-@article{li2023automatic,
+@article{li2022identifying,
   author = {Li, Yikun and Soliman, Mohamed and Avgeriou, Paris},
-  title = {Automatic identification of self-admitted technical debt from four different sources},
+  title = {Identifying self-admitted technical debt in issue tracking systems using machine learning},
   journal = {Empirical Software Engineering},
-  year = 2023,
-  month = {Apr},
-  day = 15,
-  volume = 28,
-  number = 65,
+  year = 2022,
+  month = {Jul},
+  day = 10,
+  volume = 27,
+  number = 131,
   issn = {1573-7616},
-  doi = {10.1007/s10664-023-10297-9},
+  doi = {10.1007/s10664-022-10128-3},
 }
 ```
 

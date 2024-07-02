@@ -111,10 +111,10 @@ def handle_issue_comment_event(repo, payload, config):
         return "ok"
 
     issue = repo.get_issue(number=payload["issue"]["number"])
-    comment = issue.get_comment(payload["comment"]["id"])
+    comment = payload["comment"]["body"]
 
     # Comment body will be a command like "/tdbot label", "/tdbot help", etc. So we need to parse it
-    command = comment.body.split(" ")
+    command = comment.split(" ")
     if command[0] == "/tdbot":
         if command[1] == "label":
             if len(command) == 2:
