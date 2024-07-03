@@ -62,6 +62,7 @@ By default:
 - `when-to-send`: Choose between:
   * "label":     to set whether the bot should send email notifications when an issue is labeled
   * "lingering": to set whether the bot should send email notifications when lingering issues have been identified in the repository
+  * "feature"  : to set whether the bot should send email notifications when the feature under development has been identified inside an issue
   * "all":       to set whether the bot should send email notifications for all the above scenarios
 - `email-info`: Configuration options for the email sender
   - `which-labels`: if the bot should send email notifications when it adds a label to the issue (by setting `when-to-send` to "label" or "all"), choose between:
