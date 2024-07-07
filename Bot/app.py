@@ -51,7 +51,7 @@ def label_issue(issue, config, label=None):
                 print("Issue does not have a description, no label generated", flush=True)
                 return
         elif config["payload-type"] == "merged":
-            data["text"] = issue.title + (" " + issue.body if issue.body is not None else "")
+            data["text"] = issue.title + (f" {issue.body}" if issue.body is not None else "")
         elif config["payload-type"] == "both":
             label_title_and_desc(config, data, headers, issue, url)
             return

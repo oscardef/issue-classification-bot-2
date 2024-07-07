@@ -15,7 +15,7 @@ bot_email_password = lines[1]
 # This is the name that we want to be displayed as the sender to the recipients, instead of the actual bot email address
 bot_name = 'Issue Classification Bot'
 email_server = 'smtp.gmail.com'
-email_server_port = 465
+email_server_port = 587
 
 
 # Template string formatting function for replacing placeholders with actual data
@@ -87,8 +87,10 @@ def send_email(issue_list, config, case, label=None):
     recipients = email_info['recipients']
 
     try:
-        # Establish the SMTP connection to specified server over a secure SSL connection
-        smtp = smtplib.SMTP_SSL(email_server, email_server_port)
+        # Establish a simple SMTP connection to the specified server and port
+        smtp = smtplib.SMTP(email_server, email_server_port)
+        # Secure the connection using TLS
+        smtp.starttls()
         # Log in on the SMTP server using the specified bot email address and bot email password
         smtp.login(bot_email_address, bot_email_password)
     except smtplib.SMTPAuthenticationError as e:
