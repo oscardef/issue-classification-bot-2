@@ -168,7 +168,6 @@ By default:
   "when-to-send": "all",
   "email-info": {
     "which-labels": "specific",
-    "except-labels": ["non-SATD"],
     "specific-labels": ["SATD"],
     "lingering-issue-threshold": 30,
     "lingering-mode": "last-modified",
