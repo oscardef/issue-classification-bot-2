@@ -1,0 +1,22 @@
+{
+  "payload-type": "description",
+  "endpoint": "http://model:8000/models/Model1_IssueTracker_Li2022_ESEM",
+  "label-location": "label",
+  "auto-label": false,
+  "initial-message": false,
+  "send-emails": true,
+  "when-to-send": "label",
+  "email-info": {
+    "recipients" : [
+      "myemailaddress1@gmail.com",
+      "myemailaddress2@gmail.com"
+    ],
+    "email-body-template": {
+      "label": "Hi,\n\n/issue_label has been identified in issue #/issue_number with title: '/issue_title' and description: '/issue_description', created by @/issue_author in the /issue_repository repository.\nLink to the issue: /issue_link\n\nThis is an automated email. Replies to this message will not be read."
+    },
+    "email-subject-template": {
+      "label": "Technical debt identified"
+    },
+    "which-labels": "all"
+  }
+}
