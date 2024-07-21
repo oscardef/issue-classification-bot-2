@@ -87,11 +87,11 @@ def send_email(issue_list, config, case, label=None):
     recipients = email_info['recipients']
 
     try:
-        # Establish a simple SMTP connection to the specified server and port
+        # Establish a normal SMTP connection to the specified server
         smtp = smtplib.SMTP(email_server, email_server_port)
         # Secure the connection using TLS
         smtp.starttls()
-        # Log in on the SMTP server using the specified bot email address and bot email password
+        # Authenticate to the SMTP server using the specified bot email address and bot email password
         smtp.login(bot_email_address, bot_email_password)
     except smtplib.SMTPAuthenticationError as e:
         print("SMTP authentication error:", e, flush=True)
@@ -149,7 +149,7 @@ def send_email(issue_list, config, case, label=None):
     if case == 2:
         issue = issue_list[0]
         if label:
-            if label == email_info["feature-under-development"]:
+            if label.lower() == email_info["feature-under-development"].lower():
                 email, subject = prepare_feature_email(issue_list, email_info)
             else:
                 print(f"Recently added label: {label} to issue #{issue.number} does not mention the feature under "
