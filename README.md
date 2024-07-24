@@ -39,7 +39,7 @@ By default:
    docker compose watch
    ```
 
-## Configuring the Bot
+## Using the Bot
 1. Install the bot's [GitHub App](https://github.com/apps/issue-classification-bot) on the repositories where you want the bot to operate.
 2. For each repository where you have installed the bot's GitHub App, create a `Bot` folder on the main branch and place a `config.json` file inside this folder. This will allow you to configure the bot's behavior uniquely for each repository. <br>
 **NOTE❗** <br>*If you skip this step, the bot will use the **local** `Bot/config.json` file for any repository that does not have `Bot/config.json` available on the main branch.*
