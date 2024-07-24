@@ -200,10 +200,10 @@ Interact with the *Issue Classification Bot* by using the following commands in 
 ## Troubleshooting
 If you encounter issues with the bot:
 - If labels are not being assigned to issues when a `/tdbot label` comment is posted:
-  * Verify that the `config.json` file is located both in the local `/issue-classification-bot-2/Bot` directory, and in the `repository/Bot` directory of the repositories that have the bot's GitHub App installed, and that it is [set up correctly](#configuring-the-bot).
+  * Verify that the `config.json` file is located both in the local `/issue-classification-bot-2/Bot` directory, and in the `repository/Bot` directory of the repositories that have the bot's GitHub App installed, and that it is [set up correctly](#using-the-bot).
   * Verify that the generated label is not already assigned to the issue.
 - If bot email notifications are not being sent/received:
-  * Verify that the `config.json` file is located both in the local `/issue-classification-bot-2/Bot` directory, and in the `repository/Bot` directory of the repositories that have the bot's GitHub App installed, and that it is [set up correctly](#configuring-the-bot).
+  * Verify that the `config.json` file is located both in the local `/issue-classification-bot-2/Bot` directory, and in the `repository/Bot` directory of the repositories that have the bot's GitHub App installed, and that it is [set up correctly](#using-the-bot).
   * Verify that the `bot_email.secret` file is stored in the local `/issue-classification-bot-2/Bot` directory, and that it is [set up correctly](#installation-and-running-instructions).
 
 ## License
